@@ -1,0 +1,14 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Creator Plugins",
+      "description": "Skills for building LottieFiles Creator plugins.",
+      "skills": [
+        "creator-plugin-development",
+        "creator-plugins-ui"
+      ]
+    }
+  ]
+}
