@@ -155,6 +155,7 @@ interface Animatable<T> {
   readonly isAnimated: boolean;                     // Has keyframes?
   readonly keyframes: ReadonlyArray<Keyframe<T>>;   // All keyframes
   getKeyframeAt(frame: number): Keyframe<T> | undefined;
+  getValueAt(frame?: number): T;                    // Interpolated value (defaults to current frame)
   addKeyframes(keyframes: Array<KeyframeAdd<T>>): void;
   clearKeyframes(): void;
 }
