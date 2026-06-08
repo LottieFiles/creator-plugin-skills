@@ -5,8 +5,8 @@ Instructions for adding `@lottiefiles/creator-plugins-ui` to a Creator Plugin.
 ## Prerequisites
 
 - A Creator Plugin project (see the `creator-plugin-development` skill)
-- Node.js 18+
-- pnpm
+- Node.js 20.19+ or 22.13+
+- npm
 - React 18+ (already present in all plugins)
 
 ## 1. Install the package
@@ -14,7 +14,7 @@ Instructions for adding `@lottiefiles/creator-plugins-ui` to a Creator Plugin.
 From your plugin directory:
 
 ```bash
-pnpm add @lottiefiles/creator-plugins-ui
+npm install @lottiefiles/creator-plugins-ui
 ```
 
 ## 2. Import the stylesheet
@@ -55,12 +55,12 @@ Only set up Tailwind if you need additional custom utility classes beyond what t
 
 ### Setup with Tailwind v4
 
-> **Important:** `pnpm add -D tailwindcss` installs Tailwind v4, which uses CSS-based configuration. It does not need `tailwind.config.js` or `postcss.config.js` to work.
+> **Important:** `npm install --save-dev tailwindcss` installs Tailwind v4, which uses CSS-based configuration. It does not need `tailwind.config.js` or `postcss.config.js` to work.
 
 1. Install dependencies:
 
 ```bash
-pnpm add -D tailwindcss @tailwindcss/vite
+npm install --save-dev tailwindcss @tailwindcss/vite
 ```
 
 2. Add the Vite plugin to `vite.config.ts`:

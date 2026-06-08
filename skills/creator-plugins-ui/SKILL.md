@@ -15,7 +15,7 @@ description: |
 Full guide: `references/setup-guide.md`
 
 ```bash
-pnpm add @lottiefiles/creator-plugins-ui
+npm install @lottiefiles/creator-plugins-ui
 ```
 
 ```typescript
@@ -28,7 +28,7 @@ Components and theme color utility classes (`bg-primary`, `text-foreground`, `bo
 If you need **additional** custom Tailwind classes beyond what the library provides, set up Tailwind v4:
 
 ```bash
-pnpm add -D tailwindcss @tailwindcss/vite
+npm install --save-dev tailwindcss @tailwindcss/vite
 ```
 
 Add `tailwindcss()` to `vite.config.ts` plugins, create `src/styles.css` with `@import "tailwindcss"`, and use `@theme {}` for custom colors. Do **not** create `tailwind.config.js` or `postcss.config.js` (v3 patterns). See `references/setup-guide.md` for full instructions.

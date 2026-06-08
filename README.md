@@ -4,7 +4,7 @@ Agent skills for building, maintaining, and instrumenting LottieFiles Creator Pl
 
 ## Skills
 
-- `creator-plugin-development` - Use when creating or modifying Creator Plugins, working with the plugin sandbox/UI split, using the Creator Plugin API, or manipulating the scene graph.
+- `creator-plugin-development` - Use when creating or modifying Creator Plugins, working with the plugin sandbox/UI split, using `@lottiefiles/creator-api-types`, or manipulating the scene graph.
 - `creator-plugins-ui` - Use when building plugin UIs with `@lottiefiles/creator-plugins-ui`, including component usage, theming, and common migration patterns.
 
 ## Install

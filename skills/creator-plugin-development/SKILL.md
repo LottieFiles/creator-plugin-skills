@@ -52,15 +52,15 @@ The plugin manifest (`plugin/manifest.json`) defines the plugin's identity and e
 ## Development Commands
 
 ```bash
-pnpm create-plugin my-plugin      # Scaffold a new plugin (run from repo root)
+npm create @lottiefiles/creator-plugin@latest my-plugin  # Scaffold a new plugin
 
 # From the plugin directory (e.g., plugins/my-plugin/):
-pnpm dev                           # Start dev server with HTTPS hot-reload
-pnpm build                         # TypeScript check + Vite production build
-pnpm exec tsc -b                   # Type check (run before completing any task)
+npm run dev                                      # Start dev server with HTTPS hot-reload
+npm run build                                    # TypeScript check + Vite production build
+npm exec tsc -- -b                               # Type check (run before completing any task)
 ```
 
-To load in Creator: **Plugins > Develop > New plugin** > enter the localhost URL from `pnpm dev`.
+To load in Creator: **Plugins > Develop > New plugin** > enter the localhost URL from `npm run dev`.
 
 ## Communication Pattern (Critical)
 
@@ -233,7 +233,7 @@ For complete examples, see `references/network-and-libraries.md`.
 
 Before considering a task complete:
 
-- [ ] Run `pnpm exec tsc -b` — fix all type errors
+- [ ] Run `npm exec tsc -- -b` — fix all type errors
 - [ ] Test message flow: UI sends > plugin receives > plugin responds > UI receives
 - [ ] Confirm network requests are made from UI code, not plugin sandbox
 - [ ] Verify `pluginMessage` wrapping is correct in both directions

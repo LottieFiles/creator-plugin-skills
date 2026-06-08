@@ -59,7 +59,7 @@ window.addEventListener('message', (event) => {
 The React template uses Vite for bundling. Install npm packages normally:
 
 ```bash
-pnpm install react-colorful
+npm install react-colorful
 ```
 
 Then import and use in UI components:
