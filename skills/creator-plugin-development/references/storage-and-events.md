@@ -148,13 +148,4 @@ for (const node of creator.selection.nodes) {
   if (creator.utils.isLayer(node)) { /* node is Layer */ }
   if (creator.utils.isShape(node)) { /* node is Shape */ }
 }
-
-// User info (requires "user" permission in manifest)
-const userId = creator.user?.id;
-const userName = creator.user?.name;
-const userToken = creator.user?.token;
-
-// Workspace info (requires "workspaces" permission in manifest)
-const currentWorkspace = creator.currentWorkspace;  // { id, name }
-const allWorkspaces = creator.workspaces;           // Array<{ id, name }>
 ```
