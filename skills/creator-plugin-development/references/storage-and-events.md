@@ -108,6 +108,14 @@ creator.off('selection:nodes', handler);
 // Read current selection
 const selectedNodes = creator.selection.nodes;       // ReadonlyArray<Layer | Shape>
 const selectedKeyframes = creator.selection.keyframes; // ReadonlyArray<Keyframe<unknown>>
+
+// Set the selection (assigning replaces the current selection)
+creator.selection.nodes = [layer1, shape2];
+creator.selection.keyframes = [keyframeA, keyframeB];
+
+// Clear the selection (assign an empty array)
+creator.selection.nodes = [];
+creator.selection.keyframes = [];
 ```
 
 ## Timeline API
@@ -126,18 +134,18 @@ creator.timeline.goToFrame(60);
 ## Other Global APIs
 
 ```typescript
-// Open external link
+// Open external link in the user's default browser
 creator.openLink('https://lottiefiles.com');
 
-// Close the plugin
+// Close the plugin and stop it from running
 creator.closePlugin();
 
-// User info (requires "user" permission in manifest)
-const userId = creator.user?.id;
-const userName = creator.user?.name;
-const userToken = creator.user?.token;
+// All assets in the project (scenes, images, and uploaded fonts)
+const assets = creator.assets;        // ReadonlyArray<Asset>
 
-// Workspace info (requires "workspaces" permission in manifest)
-const currentWorkspace = creator.currentWorkspace;  // { id, name }
-const allWorkspaces = creator.workspaces;           // Array<{ id, name }>
+// Type guards for narrowing selection nodes
+for (const node of creator.selection.nodes) {
+  if (creator.utils.isLayer(node)) { /* node is Layer */ }
+  if (creator.utils.isShape(node)) { /* node is Shape */ }
+}
 ```

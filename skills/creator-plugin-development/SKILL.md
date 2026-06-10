@@ -200,7 +200,8 @@ layers.forEach((node) => {
   } else if (node.type === 'SCENE_LAYER') {
     // Scene layer operations (has .scene, .break())
   } else if (node.type === 'TEXT_LAYER') {
-    // Text layer operations (has .text)
+    // Text layer operations (has .text, .fontFamily, .fontStyle, .fontSize,
+    // .alignment, .fill/.createFill, .stroke/.createStroke)
   }
 });
 ```

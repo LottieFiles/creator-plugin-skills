@@ -136,9 +136,15 @@ if (layer.type === 'IMAGE_LAYER') {
   layer.image;       // Image { type, width, height }
 }
 
-// TextLayer — has text content
+// TextLayer — has text content and styling
 if (layer.type === 'TEXT_LAYER') {
   layer.text;        // string (read/write)
+  layer.fontFamily;  // string, e.g. "Roboto"
+  layer.fontStyle;   // string, e.g. "Regular", "Bold"
+  layer.fontSize;    // number
+  layer.alignment;   // 'left' | 'center' | 'right'
+  layer.fill;        // SolidPaint | undefined
+  layer.stroke;      // TextStroke | undefined
 }
 
 // SceneLayer — references another scene
