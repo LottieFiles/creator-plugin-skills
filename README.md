@@ -12,22 +12,20 @@ Agent skills for building, maintaining, and instrumenting LottieFiles Creator Pl
 List available skills from this repository:
 
 ```bash
-npx skills add owner/repo --list
+npx skills add LottieFiles/creator-plugin-skills --list
 ```
 
 Install one skill:
 
 ```bash
-npx skills add owner/repo --skill creator-plugin-development
+npx skills add LottieFiles/creator-plugin-skills --skill creator-plugin-development
 ```
 
 Install all skills:
 
 ```bash
-npx skills add owner/repo --skill '*'
+npx skills add LottieFiles/creator-plugin-skills --skill '*'
 ```
-
-Replace `owner/repo` with the final GitHub repository path after publishing.
 
 ## Repository Layout
 
