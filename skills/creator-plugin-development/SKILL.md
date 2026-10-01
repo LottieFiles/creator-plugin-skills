@@ -156,9 +156,12 @@ const svg = await scene.import({ type: 'SVG', url: 'https://...' });
 
 // From content string
 const svgLayer = await scene.import({ type: 'SVG', content: svgString });
+
+// Audio, from a URL or base64 content
+const audio = await scene.import({ type: 'AUDIO', content: base64Audio });
 ```
 
-LOTTIE and SVG imports return `SceneLayer`. IMAGE imports return `ImageLayer`.
+LOTTIE and SVG imports return `SceneLayer`. IMAGE imports return `ImageLayer`. AUDIO imports return `AudioLayer`. A failed import rejects, so wrap `scene.import()` in `try`/`catch`.
 
 ### Animate Properties
 
@@ -188,7 +191,7 @@ creator.on('selection:nodes', (nodes) => {
 
 ### Node Type Checking
 
-Always verify node types before operations:
+Always verify node types before operations, and skip types you do not handle. `scene.layers`, `creator.selection.nodes`, and the `selection:nodes` event can return layer types your plugin does not know about, including types newer than your installed API types:
 
 ```typescript
 const layers = creator.selection.nodes;
@@ -202,9 +205,16 @@ layers.forEach((node) => {
   } else if (node.type === 'TEXT_LAYER') {
     // Text layer operations (has .text, .fontFamily, .fontStyle, .fontSize,
     // .alignment, .fill/.createFill, .stroke/.createStroke)
+  } else if (node.type === 'NULL_LAYER') {
+    // Null layer operations (transform only, has .layers)
+  } else if (node.type === 'AUDIO_LAYER') {
+    // Audio layer operations (has .audio, .muted, .volume; no transform)
   }
+  // Any other type: skip it
 });
 ```
+
+Audio layers have no transform. Before reading `position`, `opacity`, or other transform members on a layer from `scene.layers` or the selection, check its type or use `creator.utils.isTransformableLayer(layer)`. See `references/scene-graph-and-nodes.md`.
 
 ## Network Requests
 
@@ -229,6 +239,7 @@ For complete examples, see `references/network-and-libraries.md`.
 9. **Color values are 0-255** — RGB channels use the range `{ r: 0-255, g: 0-255, b: 0-255 }`.
 10. **Not calling `creator.ui.show()` early** — Call it at the top of `plugin.ts`, before setting up message handlers.
 11. **Sending messages before UI is ready** — `creator.ui.postMessage()` right after `creator.ui.show()` will be dropped because the iframe hasn't loaded. Use a "ui-ready" handshake: have the UI send `{ type: 'ui-ready' }` on mount, then send data from the plugin only after receiving that message.
+12. **Assuming every layer has a transform** — Audio layers have no `position`, `scale`, `rotation`, `opacity`, or `getBounds()`. Code that walks `scene.layers` and reads those members throws on a project with audio. Filter by type first, and skip types you do not handle.
 
 ## Verification Checklist
 
@@ -248,6 +259,6 @@ For deeper information, consult these reference files as needed:
 | `references/architecture-and-communication.md` | Detailed architecture, complete message passing examples, UI API |
 | `references/scene-graph-and-nodes.md` | Scene hierarchy, node types, traversal patterns |
 | `references/shapes-styling-animation.md` | Creating shapes, fills/strokes/gradients, keyframes, easing |
-| `references/importing-assets.md` | LOTTIE/SVG/IMAGE import formats and patterns |
+| `references/importing-assets.md` | LOTTIE/SVG/IMAGE/AUDIO import formats and patterns |
 | `references/storage-and-events.md` | clientStorage, node data, selection events, timeline API |
 | `references/network-and-libraries.md` | Fetch-from-UI pattern, using npm packages |

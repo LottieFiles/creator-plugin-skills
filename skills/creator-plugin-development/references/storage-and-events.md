@@ -102,12 +102,26 @@ creator.on('selection:nodes', handler);
 creator.off('selection:nodes', handler);
 ```
 
+`selection:nodes` can deliver layer types your plugin does not handle, such as audio layers. Check `node.type` before reading type-specific members (see `scene-graph-and-nodes.md`, Unknown Layer Types).
+
+### Audio Asset Events
+
+```typescript
+// Fires when audio assets are added to or removed from the project
+creator.on('change:audio', (audioAssets) => {
+  creator.ui.postMessage({
+    type: 'audio-changed',
+    data: audioAssets.map((a) => ({ id: a.id, name: a.name })),
+  });
+});
+```
+
 ### Selection API
 
 ```typescript
 // Read current selection
 const selectedNodes = creator.selection.nodes;       // ReadonlyArray<Layer | Shape>
-const selectedKeyframes = creator.selection.keyframes; // ReadonlyArray<Keyframe<unknown>>
+const selectedKeyframes = creator.selection.keyframes; // ReadonlyArray<Keyframe<unknown>>; audio volume keyframes have number values
 
 // Set the selection (assigning replaces the current selection)
 creator.selection.nodes = [layer1, shape2];
@@ -140,12 +154,13 @@ creator.openLink('https://lottiefiles.com');
 // Close the plugin and stop it from running
 creator.closePlugin();
 
-// All assets in the project (scenes, images, and uploaded fonts)
-const assets = creator.assets;        // ReadonlyArray<Asset>
+// All assets in the project (scenes, images, uploaded fonts, and audio)
+const assets = creator.assets;        // ReadonlyArray<Asset>; check asset.type ('AUDIO' for audio)
 
 // Type guards for narrowing selection nodes
 for (const node of creator.selection.nodes) {
-  if (creator.utils.isLayer(node)) { /* node is Layer */ }
+  if (creator.utils.isLayer(node)) { /* node is Layer, which includes audio layers */ }
   if (creator.utils.isShape(node)) { /* node is Shape */ }
+  if (creator.utils.isTransformableLayer(node)) { /* node is a layer with position, opacity, ... */ }
 }
 ```

@@ -14,6 +14,8 @@ File
 │   │   └── Star
 │   ├── ImageLayer
 │   ├── TextLayer
+│   ├── NullLayer
+│   ├── AudioLayer
 │   └── SceneLayer ──references──► Nestable Scene
 └── Nestable Scene
     └── ShapeLayer
@@ -81,23 +83,36 @@ Layers are top-level elements of a scene:
 | `'IMAGE_LAYER'` | `ImageLayer` | Contains an image asset |
 | `'TEXT_LAYER'` | `TextLayer` | Contains text content |
 | `'SCENE_LAYER'` | `SceneLayer` | References another scene |
+| `'NULL_LAYER'` | `NullLayer` | Transform-only controller other layers can be parented to |
+| `'AUDIO_LAYER'` | `AudioLayer` | Plays an audio asset; has no transform |
 
-All layers share common properties from `LayerMixin`:
+New layer types can be added to Creator over time. Handle the types your plugin knows and skip the rest; see [Unknown Layer Types](#unknown-layer-types).
+
+Every layer has the members of `BaseLayerMixin`:
 
 ```typescript
-// Common layer properties
 layer.id;              // readonly string
 layer.name;            // string (read/write)
 layer.type;            // layer type constant
 layer.visible;         // boolean
 layer.locked;          // boolean
-layer.focused;         // boolean
 layer.startFrame;      // number
 layer.endFrame;        // number
 layer.timelineOffset;  // number
+
+layer.clone();         // Duplicate the layer
+layer.remove();        // Remove from scene
+layer.shiftTo(30);     // Move the layer's timeline to a frame
+layer.bringToFront();  // Render order
+```
+
+Layers with a transform (every type except `AUDIO_LAYER`) also have the members of `LayerMixin`. `creator.utils.isTransformableLayer(layer)` narrows a layer to these types:
+
+```typescript
+layer.focused;         // boolean
 layer.blendMode;       // BlendMode
 
-// Common animatable properties (TransformMixin)
+// Animatable transform properties (TransformMixin)
 layer.position;        // Animatable<Vector>
 layer.rotation;        // Animatable<number>
 layer.scale;           // Animatable<Vector>
@@ -105,9 +120,6 @@ layer.opacity;         // Animatable<number> (0-100)
 layer.skew;            // Animatable<number>
 layer.skewAxis;        // Animatable<number>
 
-// Common methods
-layer.clone();         // Duplicate the layer
-layer.remove();        // Remove from scene
 layer.align('left');   // Align within parent
 layer.flip('horizontal'); // Flip direction
 
@@ -151,6 +163,18 @@ if (layer.type === 'TEXT_LAYER') {
 if (layer.type === 'SCENE_LAYER') {
   layer.scene;       // Scene
   layer.break();     // Break connection to source scene
+}
+
+// NullLayer — transform-only controller
+if (layer.type === 'NULL_LAYER') {
+  layer.layers;      // ReadonlyArray<Layer> parented to this null layer
+}
+
+// AudioLayer — plays sound, no transform
+if (layer.type === 'AUDIO_LAYER') {
+  layer.audio;       // AudioAsset { uri, getDuration() }
+  layer.muted;       // boolean, the same setting as `visible`
+  layer.volume;      // Animatable<number> (0-100)
 }
 ```
 
@@ -221,15 +245,33 @@ selection.forEach(node => {
 });
 ```
 
-### Layer Type Guard
+### Unknown Layer Types
+
+`scene.layers`, a scene layer's `scene.layers`, `creator.selection.nodes`, and the `selection:nodes` event can return layer types your plugin does not handle, including types newer than your installed API types. A plugin that assumes every layer is a shape, image, text, or scene layer will throw on them. For example, reading `layer.opacity.keyframes` on an audio layer throws because audio layers have no `opacity`.
+
+Keep a list of the types your plugin handles, check every layer against it, and skip the rest:
 
 ```typescript
-function isLayer(node: Layer | Shape): node is Layer {
-  return (
-    node.type === 'SHAPE_LAYER' ||
-    node.type === 'SCENE_LAYER' ||
-    node.type === 'IMAGE_LAYER' ||
-    node.type === 'TEXT_LAYER'
-  );
+// The types this plugin knows how to animate. A string set, so it also works
+// when Creator returns a type your installed API types do not include.
+const HANDLED_LAYER_TYPES: ReadonlySet<string> = new Set([
+  'SHAPE_LAYER',
+  'SCENE_LAYER',
+  'IMAGE_LAYER',
+  'TEXT_LAYER',
+]);
+
+function handledLayers(layers: ReadonlyArray<Layer>): Layer[] {
+  return layers.filter((layer) => HANDLED_LAYER_TYPES.has(layer.type));
+}
+
+for (const layer of handledLayers(creator.activeScene.layers)) {
+  // Safe to read the members of the types listed above
 }
 ```
+
+When skipping leaves nothing to work on, fall back to the plugin's normal "nothing selected" state instead of an error.
+
+To check only for a transform, `creator.utils.isTransformableLayer(layer)` is the narrower guard. It exists only on Creator builds that include audio layers, so a plugin that must also run on older builds should keep its own type list.
+
+`creator.utils.isLayer(node)` separates layers from shapes. It returns `true` for audio layers, so it does not mean the node has a transform.
