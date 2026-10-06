@@ -193,9 +193,10 @@ shapeLayer.transformParent = nullLayer;          // OK
 shapeLayer.transformParent = audioLayer;         // compile error, throws
 scene.createNullLayer({ layers: [audioLayer] }); // compile error, throws
 
+const controller = scene.createNullLayer({ name: 'Controller' });
 for (const layer of scene.layers) {
-  if (creator.utils.isTransformableLayer(layer)) {
-    layer.transformParent = nullLayer;           // OK: narrowed to TransformableLayer
+  if (layer.id !== controller.id && creator.utils.isTransformableLayer(layer)) {
+    layer.transformParent = controller;          // OK: narrowed to TransformableLayer
   }
 }
 ```
