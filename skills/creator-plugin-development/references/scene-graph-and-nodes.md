@@ -94,7 +94,6 @@ Every layer has the members of `BaseLayerMixin`:
 layer.id;              // readonly string
 layer.name;            // string (read/write)
 layer.type;            // layer type constant
-layer.visible;         // boolean
 layer.locked;          // boolean
 layer.startFrame;      // number
 layer.endFrame;        // number
@@ -109,6 +108,7 @@ layer.bringToFront();  // Render order
 Layers with a transform (every type except `AUDIO_LAYER`) also have the members of `LayerMixin`. `creator.utils.isTransformableLayer(layer)` narrows a layer to these types:
 
 ```typescript
+layer.visible;         // boolean
 layer.focused;         // boolean
 layer.blendMode;       // BlendMode
 
@@ -167,14 +167,36 @@ if (layer.type === 'SCENE_LAYER') {
 
 // NullLayer — transform-only controller
 if (layer.type === 'NULL_LAYER') {
-  layer.layers;      // ReadonlyArray<Layer> parented to this null layer
+  layer.layers;      // ReadonlyArray<TransformableLayer> parented to this null layer
 }
 
 // AudioLayer — plays sound, no transform
 if (layer.type === 'AUDIO_LAYER') {
-  layer.audio;       // AudioAsset { uri, getDuration() }
-  layer.muted;       // boolean, the same setting as `visible`
+  layer.audio;       // AudioAsset
+  layer.muted;       // boolean
   layer.volume;      // Animatable<number> (0-100)
+}
+
+// AudioAsset — the sound an audio layer plays (also in creator.assets)
+const sound = audioLayer.audio;
+sound.id;               // readonly string
+sound.name;             // string (read/write)
+sound.uri;              // string | null: a base64 `data:` URI or a URL
+await sound.getDuration(); // number | null, in seconds
+sound.remove();         // removes the asset and every audio layer that plays it
+```
+
+Audio layers cannot be a transform parent, a matte source, or a null layer child. `transformParent`, `matte` and `createNullLayer({ layers })` accept only layers with a transform (`TransformableLayer`); passing an audio layer, or a value typed as a plain `Layer`, fails to compile and throws at runtime:
+
+```typescript
+shapeLayer.transformParent = nullLayer;          // OK
+shapeLayer.transformParent = audioLayer;         // compile error, throws
+scene.createNullLayer({ layers: [audioLayer] }); // compile error, throws
+
+for (const layer of scene.layers) {
+  if (creator.utils.isTransformableLayer(layer)) {
+    layer.transformParent = nullLayer;           // OK: narrowed to TransformableLayer
+  }
 }
 ```
 
@@ -272,6 +294,6 @@ for (const layer of handledLayers(creator.activeScene.layers)) {
 
 When skipping leaves nothing to work on, fall back to the plugin's normal "nothing selected" state instead of an error.
 
-To check only for a transform, `creator.utils.isTransformableLayer(layer)` is the narrower guard. It exists only on Creator builds that include audio layers, so a plugin that must also run on older builds should keep its own type list.
+To check only for a transform, `creator.utils.isTransformableLayer(node)` is the narrower guard. It returns `false` for every shape; group shapes also have a transform, so check `node.type === 'GROUP'` separately if you handle groups. It exists only on Creator builds that include audio layers, so a plugin that must also run on older builds should keep its own type list.
 
 `creator.utils.isLayer(node)` separates layers from shapes. It returns `true` for audio layers, so it does not mean the node has a transform.

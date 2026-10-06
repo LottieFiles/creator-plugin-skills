@@ -239,7 +239,7 @@ For complete examples, see `references/network-and-libraries.md`.
 9. **Color values are 0-255** — RGB channels use the range `{ r: 0-255, g: 0-255, b: 0-255 }`.
 10. **Not calling `creator.ui.show()` early** — Call it at the top of `plugin.ts`, before setting up message handlers.
 11. **Sending messages before UI is ready** — `creator.ui.postMessage()` right after `creator.ui.show()` will be dropped because the iframe hasn't loaded. Use a "ui-ready" handshake: have the UI send `{ type: 'ui-ready' }` on mount, then send data from the plugin only after receiving that message.
-12. **Assuming every layer has a transform** — Audio layers have no `position`, `scale`, `rotation`, `opacity`, or `getBounds()`. Code that walks `scene.layers` and reads those members throws on a project with audio. Filter by type first, and skip types you do not handle.
+12. **Assuming every layer has a transform** — Audio layers have no `visible`, `position`, `scale`, `rotation`, or `opacity`. Code that walks `scene.layers` and reads those members fails to compile, and throws at runtime on a project with audio. Filter by type first, and skip types you do not handle.
 
 ## Verification Checklist
 
