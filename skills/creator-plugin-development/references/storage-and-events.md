@@ -102,7 +102,7 @@ creator.on('selection:nodes', handler);
 creator.off('selection:nodes', handler);
 ```
 
-`selection:nodes` can deliver layer types your plugin does not handle, such as audio layers. Check `node.type` before reading type-specific members (see `scene-graph-and-nodes.md`, Unknown Layer Types).
+`selection:nodes` can deliver node types your plugin does not support, such as audio layers. Check `node.type` before reading type-specific members (see `scene-graph-and-nodes.md`, Unknown Node Types).
 
 ### Audio Asset Events
 
@@ -155,7 +155,7 @@ creator.openLink('https://lottiefiles.com');
 creator.closePlugin();
 
 // All assets in the project (scenes, images, uploaded fonts, and audio)
-const assets = creator.assets;        // ReadonlyArray<Asset>; check asset.type ('AUDIO' for audio)
+const assets = creator.assets;        // ReadonlyArray<Asset>; check asset.type, new asset types can be added
 
 // Type guards for narrowing selection nodes
 for (const node of creator.selection.nodes) {

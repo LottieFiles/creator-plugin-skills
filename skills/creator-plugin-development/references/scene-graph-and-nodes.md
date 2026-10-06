@@ -86,7 +86,7 @@ Layers are top-level elements of a scene:
 | `'NULL_LAYER'` | `NullLayer` | Transform-only controller other layers can be parented to |
 | `'AUDIO_LAYER'` | `AudioLayer` | Plays an audio asset; has no transform |
 
-New layer types can be added to Creator over time. Handle the types your plugin knows and skip the rest; see [Unknown Layer Types](#unknown-layer-types).
+New layer types can be added to Creator over time. Handle the types your plugin knows and skip the rest; see [Unknown Node Types](#unknown-node-types).
 
 Every layer has the members of `BaseLayerMixin`:
 
@@ -267,33 +267,74 @@ selection.forEach(node => {
 });
 ```
 
-### Unknown Layer Types
+### Unknown Node Types
 
-`scene.layers`, a scene layer's `scene.layers`, `creator.selection.nodes`, and the `selection:nodes` event can return layer types your plugin does not handle, including types newer than your installed API types. A plugin that assumes every layer is a shape, image, text, or scene layer will throw on them. For example, reading `layer.opacity.keyframes` on an audio layer throws because audio layers have no `opacity`.
+To avoid errors and plugin crashes, your plugin should plan for unexpected node types.
 
-Keep a list of the types your plugin handles, check every layer against it, and skip the rest:
+Check `type` before reading type-specific members. For example, audio layers have no `opacity`, so `layer.opacity.keyframes` throws on one.
+
+#### Checking a node's type
+
+Every layer, shape and asset has a `type` string, such as `'SHAPE_LAYER'`, `'RECTANGLE'` or `'AUDIO'`. The [Layer Types](#layer-types) and [Shape Types](#shape-types) tables list the values.
+
+Compare `type` with `if` or `switch`. In TypeScript, this also narrows the node, so the members of that type become available:
 
 ```typescript
-// The types this plugin knows how to animate. A string set, so it also works
-// when Creator returns a type your installed API types do not include.
-const HANDLED_LAYER_TYPES: ReadonlySet<string> = new Set([
-  'SHAPE_LAYER',
-  'SCENE_LAYER',
-  'IMAGE_LAYER',
-  'TEXT_LAYER',
-]);
-
-function handledLayers(layers: ReadonlyArray<Layer>): Layer[] {
-  return layers.filter((layer) => HANDLED_LAYER_TYPES.has(layer.type));
-}
-
-for (const layer of handledLayers(creator.activeScene.layers)) {
-  // Safe to read the members of the types listed above
+for (const node of creator.selection.nodes) {
+  switch (node.type) {
+    case 'SHAPE_LAYER':
+      node.fills;        // ShapeLayer members
+      break;
+    case 'TEXT_LAYER':
+      node.text;         // TextLayer members
+      break;
+    case 'RECTANGLE':
+      node.size;         // Rectangle members
+      break;
+    default:
+      // Unsupported or unknown type: provide fallback handling
+      break;
+  }
 }
 ```
 
-When skipping leaves nothing to work on, fall back to the plugin's normal "nothing selected" state instead of an error.
+`creator.utils` has type guards for broader groups:
 
-To check only for a transform, `creator.utils.isTransformableLayer(node)` is the narrower guard. It returns `false` for every shape; group shapes also have a transform, so check `node.type === 'GROUP'` separately if you handle groups. It exists only on Creator builds that include audio layers, so a plugin that must also run on older builds should keep its own type list.
+| Guard | Returns `true` for |
+|---|---|
+| `creator.utils.isLayer(node)` | Any layer |
+| `creator.utils.isShape(node)` | Any shape |
+| `creator.utils.isTransformableLayer(node)` | Layers with a transform (every layer except audio) |
 
-`creator.utils.isLayer(node)` separates layers from shapes. It returns `true` for audio layers, so it does not mean the node has a transform.
+Assets work the same way: check `asset.type` (`'SCENE'`, `'IMAGE'`, `'FONT'`, `'AUDIO'`) before reading asset-specific members.
+
+Keep a list of the types your plugin supports and skip the rest:
+
+```typescript
+const SUPPORTED_TYPES: ReadonlySet<string> = new Set([
+  'SHAPE_LAYER',
+  'TEXT_LAYER',
+  'RECTANGLE',
+  'ELLIPSE',
+]);
+
+const supported = creator.selection.nodes.filter((node) => SUPPORTED_TYPES.has(node.type));
+```
+
+Decide what your plugin does with the nodes it skips:
+
+- **Skip them and notify the user** when the plugin works on many nodes at once (e.g. batch-renaming), then tell the users that some layers could not be updated.
+- **Notify the user upfront** when they selected only unsupported nodes. Show a message in your plugin UI, such as "Select a shape or text layer".
+
+```typescript
+if (supported.length === 0) {
+  creator.ui.postMessage({ type: 'unsupported-selection' });
+  return;
+}
+```
+
+#### Checking for a transform
+
+`creator.utils.isTransformableLayer(node)` returns `true` for layers that have `position`, `opacity` and the other transform members. It returns `false` for audio layers and for all shapes. It only exists in Creator builds that support audio layers, so a plugin that must also run on older builds should use its own type list instead.
+
+`creator.utils.isLayer(node)` returns `true` for every layer, including audio layers. Use it to tell layers from shapes, not to check for a transform.

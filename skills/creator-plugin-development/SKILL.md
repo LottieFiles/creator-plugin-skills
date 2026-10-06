@@ -191,7 +191,7 @@ creator.on('selection:nodes', (nodes) => {
 
 ### Node Type Checking
 
-Always verify node types before operations, and skip types you do not handle. `scene.layers`, `creator.selection.nodes`, and the `selection:nodes` event can return layer types your plugin does not know about, including types newer than your installed API types:
+Always check node types before operations, and skip types you do not support. `scene.layers`, `creator.selection.nodes`, `selection:nodes`, `shapes` and `creator.assets` can return types your plugin does not know about, including types newer than your installed API types. See "Unknown Node Types" in `references/scene-graph-and-nodes.md`:
 
 ```typescript
 const layers = creator.selection.nodes;
