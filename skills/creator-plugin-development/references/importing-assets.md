@@ -9,6 +9,9 @@ Plugins can import external assets into the Creator scene using `scene.import()`
 | `'LOTTIE'` | Lottie JSON (`.json`), dotLottie (`.lottie`) | `SceneLayer` |
 | `'SVG'` | SVG (`.svg`) | `SceneLayer` |
 | `'IMAGE'` | PNG, JPEG, WebP | `ImageLayer` |
+| `'AUDIO'` | MP3, WAV, OGG, M4A, FLAC | `AudioLayer` |
+
+A failed import (unreachable URL, unsupported format, malformed content) rejects. Wrap `scene.import()` in `try`/`catch` and report the error to the UI.
 
 ## Importing from URL
 
@@ -30,6 +33,12 @@ const svg = await creator.activeScene.import({
   type: 'SVG',
   url: 'https://example.com/graphic.svg'
 });
+
+// Audio
+const audio = await creator.activeScene.import({
+  type: 'AUDIO',
+  url: 'https://example.com/sound.mp3'
+});
 ```
 
 ## Importing from Content String
@@ -48,11 +57,23 @@ const svg = await creator.activeScene.import({
 });
 ```
 
+```typescript
+// Audio, as standard base64 or a base64 data: URI
+const audio = await creator.activeScene.import({
+  type: 'AUDIO',
+  content: 'data:audio/mpeg;base64,SUQzBAAAAAAA...'
+});
+```
+
+Audio files can be up to 20 MB. An audio URL must allow cross-origin (CORS) requests.
+
+Audio content must be standard base64 (`+` and `/`), not URL-safe base64. The plugin sandbox has no `FileReader` or `btoa` for binary data, so read and encode a user-picked audio file in the UI, then post the string to the plugin.
+
 Note: IMAGE type does not support `content` — only `url`.
 
 ## Working with Imported Layers
 
-Imported layers behave like any other layer. Position, scale, and animate them:
+Imported LOTTIE, SVG, and IMAGE layers behave like any other layer. Position, scale, and animate them:
 
 ```typescript
 const animation = await scene.import({
@@ -63,6 +84,23 @@ const animation = await scene.import({
 animation.name = 'My Animation';
 animation.position.staticValue = { x: 100, y: 100 };
 animation.scale.staticValue = { x: 50, y: 50 };  // 50% scale
+```
+
+An imported `AudioLayer` has no transform. Set its volume, mute state, and timing instead:
+
+```typescript
+const audio = await scene.import({ type: 'AUDIO', url: 'https://example.com/sound.mp3' });
+
+audio.name = 'Background music';
+audio.volume.addKeyframes([
+  { frame: 0, value: 0 },    // fade in over the first second at 30 fps
+  { frame: 30, value: 100 },
+]);
+audio.shiftTo(15);           // start at frame 15
+
+audio.muted = true;
+
+const seconds = await audio.audio.getDuration();  // number | null
 ```
 
 ## Centering and Scaling Pattern
