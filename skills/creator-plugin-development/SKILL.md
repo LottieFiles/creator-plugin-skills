@@ -45,9 +45,15 @@ The plugin manifest (`plugin/manifest.json`) defines the plugin's identity and e
   "name": "My Plugin",
   "apiVersion": "1",
   "entry": "plugin.js",
-  "ui": "ui.html"
+  "ui": "ui.html",
+  "networkAccess": {
+    "allowedDomains": []
+  },
+  "capabilities": []
 }
 ```
+
+`networkAccess.allowedDomains` lists every host the UI contacts. Use an empty list when the plugin makes no network requests. Leave `capabilities` empty, or add `codeGeneration` when the plugin uses `eval`. See `references/network-and-libraries.md`.
 
 ## Development Commands
 
@@ -220,9 +226,12 @@ Audio layers have no transform. Before reading `position`, `opacity`, or other t
 
 The plugin sandbox **cannot** make `fetch` requests. Use this pattern:
 
-1. **UI fetches** data from external API
-2. **UI sends** data to plugin via `parent.postMessage({ pluginMessage: ... }, '*')`
-3. **Plugin processes** data and applies to scene
+1. **Manifest declares** the API's host in `networkAccess.allowedDomains`, for example `"api.example.com"`
+2. **UI fetches** data from external API
+3. **UI sends** data to plugin via `parent.postMessage({ pluginMessage: ... }, '*')`
+4. **Plugin processes** data and applies to scene
+
+Scripts, stylesheets and WebAssembly are bundled into `ui.html`, never loaded from a CDN.
 
 For complete examples, see `references/network-and-libraries.md`.
 
@@ -230,7 +239,7 @@ For complete examples, see `references/network-and-libraries.md`.
 
 1. **Missing `pluginMessage` wrapper** — UI-to-plugin messages MUST be wrapped: `{ pluginMessage: { ... } }`. Plugin-to-UI messages do NOT need wrapping.
 2. **Fetching from plugin sandbox** — Network requests only work in UI code. Move `fetch` calls to `src/`.
-3. **Using `localStorage`/`sessionStorage`** — The sandboxed iframe blocks browser storage APIs. Use `creator.clientStorage` from plugin code instead.
+3. **Using `localStorage`/`sessionStorage`** — Do not use browser storage APIs in the UI. Use `creator.clientStorage` from plugin code instead.
 4. **Not checking node types** — Always verify `node.type` before accessing type-specific properties.
 5. **Setting `staticValue` on animated properties** — Setting `staticValue` when keyframes exist will not affect the animation. Clear keyframes first or modify keyframe values directly.
 6. **Invisible shapes** — Shapes need a fill or stroke to be visible. After `createRectangle()`, call `createFill()`.
@@ -240,6 +249,12 @@ For complete examples, see `references/network-and-libraries.md`.
 10. **Not calling `creator.ui.show()` early** — Call it at the top of `plugin.ts`, before setting up message handlers.
 11. **Sending messages before UI is ready** — `creator.ui.postMessage()` right after `creator.ui.show()` will be dropped because the iframe hasn't loaded. Use a "ui-ready" handshake: have the UI send `{ type: 'ui-ready' }` on mount, then send data from the plugin only after receiving that message.
 12. **Assuming every layer has a transform** — Audio layers have no `visible`, `position`, `scale`, `rotation`, or `opacity`. Code that walks `scene.layers` and reads those members fails to compile, and throws at runtime on a project with audio. Filter by type first, and skip types you do not handle.
+13. **Undeclared hosts** — Declare every host the UI contacts in `networkAccess.allowedDomains`, for dev plugins as well as published ones. Declare the exact host or a `*.example.com` wildcard, with no scheme or path. `*.example.com` does not cover `example.com`.
+14. **Loading libraries from a CDN** — Do not load `<script src="https://cdn...">` or `import()` a URL, even from a declared host. Install the package and let Vite bundle it, or paste the library into an inline `<script>` in `ui.html`.
+15. **Running fetched text as code** — Do not build `<script>` elements, or call `eval` or `new Function`, from fetched text. Fetch data, not code. Declare `codeGeneration` only when the plugin compiles code on purpose.
+16. **WebAssembly from a CDN** — Players such as dotlottie and ThorVG download their `.wasm` from a CDN by default. Bundle the file and point the player at it.
+17. **`javascript:` URLs** — Use `addEventListener` instead of `href="javascript:..."`. Inline event handlers written in your HTML (`onclick="..."`) are fine. Do not add handler attributes from script.
+18. **Navigating the plugin page** — Do not change `location.href` or link to another page from the plugin UI. Open web pages with `creator.openLink(url)` from the sandbox.
 
 ## Verification Checklist
 
@@ -248,6 +263,8 @@ Before considering a task complete:
 - [ ] Run `npm exec tsc -- -b` — fix all type errors
 - [ ] Test message flow: UI sends > plugin receives > plugin responds > UI receives
 - [ ] Confirm network requests are made from UI code, not plugin sandbox
+- [ ] Every host the UI contacts is in `networkAccess.allowedDomains`, and the browser console shows no `Creator blocked` warnings
+- [ ] No `<script src>` or `.wasm` loaded from a URL in `ui.html`
 - [ ] Verify `pluginMessage` wrapping is correct in both directions
 
 ## Reference Guide
@@ -261,4 +278,4 @@ For deeper information, consult these reference files as needed:
 | `references/shapes-styling-animation.md` | Creating shapes, fills/strokes/gradients, keyframes, easing |
 | `references/importing-assets.md` | LOTTIE/SVG/IMAGE/AUDIO import formats and patterns |
 | `references/storage-and-events.md` | clientStorage, node data, selection events, timeline API |
-| `references/network-and-libraries.md` | Fetch-from-UI pattern, using npm packages |
+| `references/network-and-libraries.md` | Fetch-from-UI pattern, declaring `networkAccess` and `capabilities`, bundling libraries and WebAssembly |
