@@ -68,7 +68,8 @@ List every host the plugin UI contacts in `manifest.json`:
   "networkAccess": {
     "allowedDomains": ["api.example.com", "*.cdn.example.com"],
     "reasoning": "Loads icon sets from the publisher's API."
-  }
+  },
+  "capabilities": []
 }
 ```
 

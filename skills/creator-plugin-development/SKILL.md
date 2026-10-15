@@ -48,11 +48,12 @@ The plugin manifest (`plugin/manifest.json`) defines the plugin's identity and e
   "ui": "ui.html",
   "networkAccess": {
     "allowedDomains": []
-  }
+  },
+  "capabilities": []
 }
 ```
 
-`networkAccess.allowedDomains` lists every host the UI contacts. Use an empty list when the plugin makes no network requests. Declare `codeGeneration` in the optional `capabilities` field when the plugin uses `eval`. See `references/network-and-libraries.md`.
+`networkAccess.allowedDomains` lists every host the UI contacts. Use an empty list when the plugin makes no network requests. Leave `capabilities` empty, or add `codeGeneration` when the plugin uses `eval`. See `references/network-and-libraries.md`.
 
 ## Development Commands
 
