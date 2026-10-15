@@ -65,6 +65,8 @@ const audio = await creator.activeScene.import({
 });
 ```
 
+Audio files can be up to 20 MB. An audio URL must allow cross-origin (CORS) requests.
+
 Audio content must be standard base64 (`+` and `/`), not URL-safe base64. The plugin sandbox has no `FileReader` or `btoa` for binary data, so read and encode a user-picked audio file in the UI, then post the string to the plugin.
 
 Note: IMAGE type does not support `content` — only `url`.
@@ -95,6 +97,8 @@ audio.volume.addKeyframes([
   { frame: 30, value: 100 },
 ]);
 audio.shiftTo(15);           // start at frame 15
+
+audio.muted = true;
 
 const seconds = await audio.audio.getDuration();  // number | null
 ```
